@@ -1,0 +1,79 @@
+//user
+
+const Joi = require("joi"),
+  jwt = require("jsonwebtoken"),
+  mongoose = require("mongoose");
+
+const usc = new mongoose.Schema({
+  fname: { type: String, required: true, minlength: 3, maxlength: 20 },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    minlength: 3,
+    maxlength: 255,
+  },
+  pass: { type: String, required: true, minlength: 8, maxlength: 1024 },
+  isAdmin: Boolean,
+});
+
+usc.methods.genTokens = function () {
+  const token = jwt.sign(
+    { _id: this._id, isAdmin: this.isAdmin },
+    "privateKey",
+  );
+  return token;
+};
+
+const User = new mongoose.model("User", usc);
+
+function userValid(user) {
+  const schema = {
+    fname: Joi.string().min(3).max(20).required(),
+    email: Joi.string().min(3).max(255).required().email(),
+    pass: Joi.string().min(8).max(1024).required(),
+  };
+  return Joi.valid(user, schema);
+}
+
+exports.User = User;
+exports.userValid = userValid;
+
+users
+const express = require("express"),
+  router = express.Router(),
+  lodash = require("lodash"),
+  bcrypt = require("bcrypt"),
+  { User, userValid } = require("../model/user"),
+  auth = require("../middleware/auth");
+
+// router.get("/profile", auth, async (req, res) => {
+//   const profile = await User.findById(req.user._id).select("-pass");
+//   res.send(profile);
+// });
+
+router.use(express.json());
+// add employee
+router.post("/", async (req, res) => {
+  const { error } = userValid(req.body);
+  if (error) {
+    return res.status(404).send(error.details[0].message);
+  }
+  let user = await User.findOne({ email: req.body.email });
+  if (user) {
+    return res.status(404).send("user found in DB");
+  }
+  // fetch users from db
+  user = new User(lodash.pick(req.body, ["fname", "email", "pass"]));
+  const saltRounds = 10; // Number of cipher characters
+  const salt = await bcrypt.genSalt(saltRounds); // Generate cipher characters
+  user.pass = await bcrypt.hash(user.pass, salt); // Add encoding characters to password
+  await user.save(); // save in DB
+  const token = user.genTokens();
+  // res.header('x-auth-token',token).send(user); // view data in DB [_id, fname, email, pass]
+  res
+    .header("x-auth-token", token)
+    .send(lodash.pick(user, ["_id", "fname", "email"])); // view data in DB [fname, email, pass]
+});
+
+module.exports = router;
