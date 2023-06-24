@@ -1,0 +1,50 @@
+-- pachage to working direct
+nodemon index
+npm init
+npm init --yes
+npm i mongoose
+npm i underscore
+npm i nodemon --save-dev
+npm i jshint --save-dev
+npm i express
+npm i morgan
+npm i helmet
+npm i multer
+npm i express mongoose
+rm -r node_modules
+
+const express = require("express"),
+  app = express(),
+  mongoose = require("mongoose");
+
+mongoose
+  .connect("mongodb://localhost/employees", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
+  .then(() => console.log("Connected to DB!"))
+  .catch((error) => console.error("Failed! ", error));
+
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.error(`App working on PORT: ${PORT}`));
+
+
+================== Commands to ==================
+-- Update all pachages
+  npm update
+-- delete pachage
+  npm un d3-random
+-- show Libraries
+  npm list
+-- show all Libraries
+  npm list --depth=0
+-- show all pachage dependencies
+  npm view mongoose dependencies
+-- install version from pachage
+  npm i d3-random@1.1.1
+  npm outdate
+-- all pachages on system
+  npm i -g npm-check-updates
+-- install pachage on invironment developer
+  set NODE_ENV=production
+  set NODE_ENV=development
